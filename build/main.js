@@ -16,16 +16,59 @@ var _webpackDevServer = require('webpack-dev-server');
 
 var _webpackDevServer2 = _interopRequireDefault(_webpackDevServer);
 
+var _morgan = require('morgan');
+
+var _morgan2 = _interopRequireDefault(_morgan);
+
+var _bodyParser = require('body-parser');
+
+var _bodyParser2 = _interopRequireDefault(_bodyParser);
+
+var _mongoose = require('mongoose');
+
+var _mongoose2 = _interopRequireDefault(_mongoose);
+
+var _expressSession = require('express-session');
+
+var _expressSession2 = _interopRequireDefault(_expressSession);
+
+var _routes = require('./routes');
+
+var _routes2 = _interopRequireDefault(_routes);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var app = (0, _express2.default)();
 var port = 3000;
 var devPort = 9999;
 
+app.use((0, _morgan2.default)('dev'));
+app.use(_bodyParser2.default.json());
+
+/* mongodb connection */
+var db = _mongoose2.default.connection;
+db.on('error', console.error);
+db.once('open', function () {
+    console.log('Conntected to mongod server');
+});
+_mongoose2.default.connect('mongodb://localhost/project1');
+
+/* use session */
+app.use((0, _expressSession2.default)({
+    secret: 'Project11@3!7&&999',
+    resave: false,
+    saveUninitialized: true
+}));
+
 app.use('/', _express2.default.static(_path2.default.join(__dirname, './../public')));
 
-app.get('/hello', function (req, res) {
-    return res.send('Hello React Dev Environment');
+/* setup routers & static directory */
+app.use('/api', _routes2.default);
+
+/* handle error */
+app.use(function (err, req, res, next) {
+    console.error(err.statck);
+    res.status(500).send('Something broke!');
 });
 
 app.listen(port, function () {

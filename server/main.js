@@ -4,14 +4,45 @@ import path from 'path';
 import webpack from 'webpack';
 import webpackDevServer from 'webpack-dev-server';
 
+import morgan from 'morgan';
+import bodyParser from 'body-parser';
+
+import mongoose from 'mongoose';
+import session from 'express-session';
+
+import api from './routes';
+
+
+
 const app = express();
 const port = 3000;
 const devPort = 9999;
 
+app.use(morgan('dev'));
+app.use(bodyParser.json());
+
+/* mongodb connection */
+const db = mongoose.connection;
+db.on('error', console.error);
+db.once('open', () => { console.log('Conntected to mongod server'); });
+mongoose.connect('mongodb://localhost/project1');
+
+/* use session */
+app.use(session({
+    secret: 'Project11@3!7&&999',
+    resave: false,
+    saveUninitialized: true    
+}));
+
 app.use('/', express.static(path.join(__dirname, './../public')));
 
-app.get('/hello', (req, res) => {
-    return res.send('Hello React Dev Environment');
+/* setup routers & static directory */
+app.use('/api', api);
+
+/* handle error */
+app.use(function(err, req, res, next) {
+    console.error(err.statck);
+    res.status(500).send('Something broke!');
 });
 
 app.listen(port, () => {
